@@ -4,6 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  base: './', // GitHub Pages 배포를 위한 상대 경로
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
