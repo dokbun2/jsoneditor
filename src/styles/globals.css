@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gradient-angle: 135deg;
+  }
+  
+  html {
+    @apply antialiased scroll-smooth;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  body {
+    @apply bg-background-primary text-text-primary;
+    background: 
+      radial-gradient(ellipse at top left, rgba(94, 106, 210, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+      linear-gradient(180deg, #08090a 0%, #0f1011 100%);
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(94, 106, 210, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  #root {
+    position: relative;
+    z-index: 2;
+  }
+  
+  * {
+    @apply border-border-primary;
+  }
+  
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-primary/50 ring-offset-2 ring-offset-background-primary;
+  }
+  
+  /* Selection styles */
+  ::selection {
+    @apply bg-brand-primary/30 text-text-primary;
+  }
+  
+  /* Select dropdown option styles */
+  option {
+    @apply bg-background-secondary text-text-primary;
+  }
+  
+  /* Input autofill styles */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f7f8f8;
+    -webkit-box-shadow: 0 0 0px 1000px #141516 inset;
+    transition: background-color 5000s ease-in-out 0s;
+    border-color: #34343a;
+  }
+}
+
+@layer components {
+  /* Custom scrollbar styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 100px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.06) 100%);
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.15) 100%);
+  }
+  
+  /* Glass morphism */
+  .glass {
+    @apply bg-white/[0.02] backdrop-blur-xl;
+    @apply border border-white/[0.05];
+    @apply shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+  }
+  
+  .glass-sm {
+    @apply bg-white/[0.01] backdrop-blur-md;
+    @apply border border-white/[0.03];
+  }
+  
+  .glass-hover {
+    @apply hover:bg-white/[0.04] transition-colors duration-200;
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent;
+  }
+  
+  .gradient-text-brand {
+    @apply bg-gradient-to-r from-brand-primary to-purple-400 bg-clip-text text-transparent;
+  }
+  
+  /* Glow effects */
+  .glow {
+    box-shadow: 
+      0 0 20px rgba(94, 106, 210, 0.15),
+      0 0 40px rgba(94, 106, 210, 0.1),
+      0 0 60px rgba(94, 106, 210, 0.05);
+  }
+  
+  .glow-sm {
+    box-shadow: 
+      0 0 10px rgba(94, 106, 210, 0.1),
+      0 0 20px rgba(94, 106, 210, 0.05);
+  }
+  
+  /* Animations */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  /* Grid background */
+  .grid-bg {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  
+  /* Dot pattern background */
+  .dot-bg {
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}

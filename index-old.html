@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Formatter & Validator - Online JSON Tools</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <h1>JSON Formatter & Validator</h1>
+                <p>Format, validate, and manipulate JSON data online</p>
+            </div>
+            <nav>
+                <a href="#" class="nav-link">Home</a>
+                <a href="#" class="nav-link">About</a>
+                <a href="#" class="nav-link">Tools</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="toolbar">
+            <div class="toolbar-section">
+                <button id="formatBtn" class="btn btn-primary">
+                    <span class="icon">⚡</span> Format
+                </button>
+                <button id="validateBtn" class="btn">
+                    <span class="icon">✓</span> Validate
+                </button>
+                <button id="minifyBtn" class="btn">
+                    <span class="icon">—</span> Minify
+                </button>
+                <button id="clearBtn" class="btn">
+                    <span class="icon">✕</span> Clear
+                </button>
+                <button id="compareBtn" class="btn">
+                    <span class="icon">⇄</span> Compare
+                </button>
+            </div>
+            
+            <div class="toolbar-section">
+                <label for="indentSize">Indent:</label>
+                <select id="indentSize">
+                    <option value="0">Compact</option>
+                    <option value="2" selected>2 spaces</option>
+                    <option value="3">3 spaces</option>
+                    <option value="4">4 spaces</option>
+                    <option value="5">5 spaces</option>
+                    <option value="6">6 spaces</option>
+                    <option value="8">8 spaces</option>
+                    <option value="10">Tab</option>
+                </select>
+                
+                <button id="copyInputBtn" class="btn btn-small">
+                    <span class="icon">📋</span> Copy Input
+                </button>
+                <button id="copyOutputBtn" class="btn btn-small">
+                    <span class="icon">📋</span> Copy Output
+                </button>
+            </div>
+            
+            <div class="toolbar-section">
+                <label for="viewMode">View:</label>
+                <select id="viewMode">
+                    <option value="code">Code</option>
+                    <option value="tree">Tree</option>
+                    <option value="preview">Preview</option>
+                </select>
+                
+                <button id="fontSizeDown" class="btn btn-small">A-</button>
+                <button id="fontSizeUp" class="btn btn-small">A+</button>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-panel input-panel">
+                <div class="panel-header">
+                    <h3>Input JSON</h3>
+                    <div class="panel-actions">
+                        <label for="fileInput" class="btn btn-small file-label">
+                            <span class="icon">📁</span> Load File
+                        </label>
+                        <input type="file" id="fileInput" accept=".json,.txt" style="display: none;">
+                        <button id="loadUrlBtn" class="btn btn-small">
+                            <span class="icon">🔗</span> Load URL
+                        </button>
+                        <button id="sampleBtn" class="btn btn-small">
+                            <span class="icon">📝</span> Sample
+                        </button>
+                    </div>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" id="lineNumbers"></div>
+                    <textarea id="inputEditor" placeholder="Paste your JSON here..."></textarea>
+                </div>
+                <div class="panel-footer">
+                    <div class="status-bar">
+                        <span id="inputStatus" class="status">Ready</span>
+                        <span id="inputLines" class="line-info">Lines: 0</span>
+                        <span id="inputChars" class="char-info">Characters: 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="editor-panel output-panel">
+                <div class="panel-header">
+                    <h3>Formatted JSON</h3>
+                    <div class="panel-actions">
+                        <button id="downloadBtn" class="btn btn-small">
+                            <span class="icon">💾</span> Download
+                        </button>
+                        <button id="fullscreenBtn" class="btn btn-small">
+                            <span class="icon">⛶</span> Fullscreen
+                        </button>
+                    </div>
+                </div>
+                <div class="editor-wrapper">
+                    <div id="outputDisplay" class="output-display">
+                        <pre id="outputContent"></pre>
+                        <div id="treeView" class="tree-view" style="display: none;"></div>
+                        <div id="previewView" class="preview-view" style="display: none;"></div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="status-bar">
+                        <span id="outputStatus" class="status">No output</span>
+                        <span id="outputLines" class="line-info">Lines: 0</span>
+                        <span id="outputSize" class="size-info">Size: 0 B</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="error-container" id="errorContainer" style="display: none;">
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2024 JSON Formatter & Validator. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- URL Load Modal -->
+    <div id="urlModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Load JSON from URL</h2>
+            <input type="url" id="urlInput" placeholder="Enter JSON URL..." />
+            <div class="modal-actions">
+                <button id="loadUrlConfirm" class="btn btn-primary">Load</button>
+                <button id="loadUrlCancel" class="btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
