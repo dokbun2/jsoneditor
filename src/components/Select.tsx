@@ -7,7 +7,7 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLDivElement>, 'onChange' | 'value' | 'defaultValue'> {
+export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLDivElement>, 'onChange' | 'value' | 'defaultValue' | 'onClick'> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -118,7 +118,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
         <div className="relative" ref={selectRef}>
           <button
             type="button"
-            onClick={() => !disabled && setIsOpen(!isOpen)}
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => !disabled && setIsOpen(!isOpen)}
             className={cn(
               'h-11 w-full rounded-xl',
               'bg-white/5 backdrop-blur-xl',
@@ -136,7 +136,6 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
               className
             )}
             disabled={disabled}
-            {...props}
           >
             {selectedOption ? selectedOption.label : placeholder}
           </button>

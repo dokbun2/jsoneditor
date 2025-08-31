@@ -6,10 +6,7 @@ import {
   SimpleFooter
 } from '@/components';
 import JsonEditor from '@/components/JsonEditor';
-import JsonTreeView from '@/components/JsonTreeView';
 import { cn } from '@/utils/cn';
-
-type ViewMode = 'code' | 'tree';
 
 const App: React.FC = () => {
   // Core state
@@ -18,7 +15,6 @@ const App: React.FC = () => {
   const [parsedData, setParsedData] = useState<any>(null);
   
   // UI state
-  const [viewMode, setViewMode] = useState<ViewMode>('code');
   const [fontSize, setFontSize] = useState(14);
   const [indentSize] = useState(2);
   const [theme] = useState<'light' | 'dark'>('dark');
@@ -28,9 +24,6 @@ const App: React.FC = () => {
   const [showLineNumbers] = useState(true);
   const [wordWrap] = useState(true);
   const [minimap] = useState(false);
-  const [expandAll, setExpandAll] = useState(false);
-  const [collapseAll, setCollapseAll] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   
   // Validation state
   const [error, setError] = useState<string | null>(null);
@@ -273,54 +266,6 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   }, [outputJson, inputJson, fileName]);
 
-  // Handle tree view edit
-  const handleTreeEdit = useCallback((path: string[], value: any) => {
-    if (!parsedData) return;
-    
-    // Deep clone and update the data
-    const newData = JSON.parse(JSON.stringify(parsedData));
-    let current = newData;
-    
-    for (let i = 0; i < path.length - 1; i++) {
-      current = current[path[i]];
-    }
-    
-    if (path.length > 0) {
-      current[path[path.length - 1]] = value;
-    }
-    
-    const formatted = JSON.stringify(newData, null, indentSize);
-    setInputJson(formatted);
-    setParsedData(newData);
-    if (liveMode) {
-      setOutputJson(formatted);
-    }
-  }, [parsedData, indentSize, liveMode]);
-
-  // Handle tree view delete
-  const handleTreeDelete = useCallback((path: string[]) => {
-    if (!parsedData || path.length === 0) return;
-    
-    const newData = JSON.parse(JSON.stringify(parsedData));
-    let current = newData;
-    
-    for (let i = 0; i < path.length - 1; i++) {
-      current = current[path[i]];
-    }
-    
-    if (Array.isArray(current)) {
-      current.splice(parseInt(path[path.length - 1]), 1);
-    } else {
-      delete current[path[path.length - 1]];
-    }
-    
-    const formatted = JSON.stringify(newData, null, indentSize);
-    setInputJson(formatted);
-    setParsedData(newData);
-    if (liveMode) {
-      setOutputJson(formatted);
-    }
-  }, [parsedData, indentSize, liveMode]);
 
   // Handle error click to jump to error position
   const handleErrorClick = useCallback(() => {

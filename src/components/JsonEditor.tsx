@@ -20,7 +20,6 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
   onChange,
   readOnly = false,
   fontSize = 14,
-  theme = 'dark',
   height = '500px',
   showLineNumbers = true,
   wordWrap = true,
