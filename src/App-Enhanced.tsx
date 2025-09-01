@@ -398,7 +398,7 @@ const App: React.FC = () => {
 
       {/* Toolbar */}
       <div className="border-b border-border-primary bg-background-secondary/30">
-        <div className="container mx-auto px-4 py-2">
+        <div className="container mx-auto px-4 py-1">
           <div className="flex flex-wrap items-center justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <div className="h-5 w-px bg-border-primary" />
@@ -596,24 +596,48 @@ const App: React.FC = () => {
         <div className="container mx-auto px-4 py-2">
           {error ? (
             <div 
-              className="bg-yellow-300 border border-red-500 rounded p-3 cursor-pointer hover:bg-yellow-400 transition-colors"
+              className="relative bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-lg p-4 cursor-pointer hover:from-red-500/15 hover:to-orange-500/15 transition-all duration-300 shadow-lg backdrop-blur-sm group"
               onClick={handleErrorClick}
               title="클릭하여 오류 위치로 이동"
             >
-              <span className="text-red-600 font-semibold text-sm">❌ 오류: {error}</span>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center animate-pulse">
+                  <span className="text-red-500 text-lg">⚠️</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-red-400 font-semibold text-sm mb-1">JSON 구문 오류 감지</h3>
+                  <p className="text-red-300 text-sm font-mono">{error}</p>
+                  <p className="text-red-400/70 text-xs mt-2 group-hover:text-red-400/90 transition-colors">
+                    💡 클릭하여 오류 위치로 이동
+                  </p>
+                </div>
+              </div>
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-red-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             </div>
           ) : fixedIssues.length > 0 && (
-            <div className="bg-status-successLight border border-status-success/30 rounded p-3">
-              <span className="text-status-success text-sm">
-                ✅ 수정된 항목: {fixedIssues.join(', ')}
-              </span>
+            <div className="relative bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-lg p-4 shadow-lg backdrop-blur-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-green-500 text-lg">✨</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-green-400 font-semibold text-sm mb-1">자동 수정 완료</h3>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {fixedIssues.map((issue, index) => (
+                      <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                        {issue}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
       )}
 
       {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 py-4">
+      <main className="flex-1 container mx-auto px-4 py-1">
         <div className="h-full">
           {/* Single panel */}
           <Card variant="elevated" className="overflow-hidden h-full">
