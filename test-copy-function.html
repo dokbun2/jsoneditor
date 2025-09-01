@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copy Function Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        h1 { color: #4a9eff; }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .test-button {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #3a8eef;
+        }
+        .success {
+            background: #10b981;
+        }
+        .error {
+            background: #ef4444;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #333;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: #000;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>복사 기능 테스트</h1>
+    
+    <div class="test-section">
+        <h2>테스트 JSON 데이터</h2>
+        <textarea id="testData">{
+  "name": "iPhone 17",
+  "price": 1200000,
+  "features": ["AI", "5G", "Camera"],
+  "metadata": {
+    "release": "2025",
+    "color": "Space Black"
+  }
+}</textarea>
+    </div>
+
+    <div class="test-section">
+        <h2>복사 방법 테스트</h2>
+        
+        <button class="test-button" onclick="testClipboardAPI()">
+            1. Clipboard API 테스트
+        </button>
+        
+        <button class="test-button" onclick="testExecCommand()">
+            2. execCommand 테스트
+        </button>
+        
+        <button class="test-button" onclick="testFullFunction()">
+            3. 전체 함수 테스트 (실제 구현)
+        </button>
+        
+        <div id="status" class="status">테스트 대기 중...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>붙여넣기 테스트</h2>
+        <textarea id="pasteArea" placeholder="여기에 붙여넣기 (Ctrl+V 또는 Cmd+V)"></textarea>
+        <button class="test-button" onclick="verifyPaste()">붙여넣기 검증</button>
+    </div>
+
+    <script>
+        function updateStatus(message, isSuccess) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.background = isSuccess ? '#10b981' : '#ef4444';
+        }
+
+        // 1. Clipboard API 테스트
+        async function testClipboardAPI() {
+            const data = document.getElementById('testData').value;
+            
+            if (!navigator.clipboard) {
+                updateStatus('❌ Clipboard API를 사용할 수 없습니다.', false);
+                return;
+            }
+            
+            if (!window.isSecureContext) {
+                updateStatus('❌ 보안 컨텍스트가 아닙니다 (HTTPS 필요).', false);
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(data);
+                updateStatus('✅ Clipboard API 복사 성공!', true);
+            } catch (err) {
+                updateStatus(`❌ Clipboard API 오류: ${err.message}`, false);
+            }
+        }
+
+        // 2. execCommand 테스트
+        function testExecCommand() {
+            const data = document.getElementById('testData').value;
+            const textArea = document.createElement('textarea');
+            textArea.value = data;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    updateStatus('✅ execCommand 복사 성공!', true);
+                } else {
+                    updateStatus('❌ execCommand 복사 실패', false);
+                }
+            } catch (err) {
+                updateStatus(`❌ execCommand 오류: ${err.message}`, false);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // 3. 실제 구현 테스트
+        function testFullFunction() {
+            const data = document.getElementById('testData').value;
+            
+            // 실제 App.tsx의 copyToClipboard 함수 로직
+            const copyToClipboard = () => {
+                // Fallback 함수 (내부에 정의)
+                const fallbackCopyToClipboard = (text) => {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            updateStatus('✅ 전체 함수 테스트 성공 (fallback 사용)!', true);
+                        } else {
+                            updateStatus('❌ 전체 함수 테스트 실패', false);
+                        }
+                    } catch (err) {
+                        updateStatus(`❌ 전체 함수 오류: ${err.message}`, false);
+                    }
+                    
+                    document.body.removeChild(textArea);
+                };
+                
+                // Clipboard API 시도
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(data)
+                        .then(() => {
+                            updateStatus('✅ 전체 함수 테스트 성공 (Clipboard API)!', true);
+                        })
+                        .catch(err => {
+                            console.error('Clipboard API 실패, fallback 시도:', err);
+                            fallbackCopyToClipboard(data);
+                        });
+                } else {
+                    console.log('Clipboard API 사용 불가, fallback 사용');
+                    fallbackCopyToClipboard(data);
+                }
+            };
+            
+            copyToClipboard();
+        }
+
+        // 붙여넣기 검증
+        function verifyPaste() {
+            const original = document.getElementById('testData').value;
+            const pasted = document.getElementById('pasteArea').value;
+            
+            if (!pasted) {
+                updateStatus('⚠️ 붙여넣기 영역이 비어있습니다.', false);
+                return;
+            }
+            
+            try {
+                const originalObj = JSON.parse(original);
+                const pastedObj = JSON.parse(pasted);
+                
+                if (JSON.stringify(originalObj) === JSON.stringify(pastedObj)) {
+                    updateStatus('✅ 붙여넣기 검증 성공! JSON이 정확히 일치합니다.', true);
+                } else {
+                    updateStatus('⚠️ JSON이 다릅니다. 포맷은 유효하지만 내용이 다릅니다.', false);
+                }
+            } catch (err) {
+                updateStatus(`❌ JSON 파싱 오류: ${err.message}`, false);
+            }
+        }
+
+        // 페이지 로드 시 환경 정보 표시
+        window.onload = () => {
+            const info = [];
+            info.push(`브라우저: ${navigator.userAgent.match(/Chrome|Safari|Firefox|Edge/)?.[0] || 'Unknown'}`);
+            info.push(`Clipboard API: ${navigator.clipboard ? '✅' : '❌'}`);
+            info.push(`Secure Context: ${window.isSecureContext ? '✅' : '❌'}`);
+            info.push(`Protocol: ${location.protocol}`);
+            
+            console.log('환경 정보:', info.join(' | '));
+            updateStatus(`환경: ${info.join(' | ')}`, true);
+        };
+    </script>
+</body>
+</html>
