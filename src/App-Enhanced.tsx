@@ -393,6 +393,39 @@ const App: React.FC = () => {
         <div className="container mx-auto px-4 py-2">
           <div className="flex flex-wrap items-center justify-between">
             <div className="flex flex-wrap items-center gap-3">
+              {/* File operations */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="danger" 
+                  size="xs"
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      handleInputChange(text);
+                      setError(null);
+                    } catch (err) {
+                      setError('클립보드에서 텍스트를 읽을 수 없습니다.');
+                    }
+                  }}
+                  title="클립보드에서 붙여넣기"
+                >
+                  📋 자동복붙
+                </Button>
+
+                <label htmlFor="fileInput" className="cursor-pointer">
+                  <Button variant="primary" size="xs" as="span">
+                    📁 파일 열기
+                  </Button>
+                </label>
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept=".json,.txt"
+                  className="hidden"
+                  onChange={handleFileLoad}
+                />
+              </div>
+
               <div className="h-5 w-px bg-border-primary" />
 
               {/* JSON operations */}
