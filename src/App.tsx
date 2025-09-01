@@ -273,6 +273,38 @@ const App: React.FC = () => {
   }, []);
 
   const copyToClipboard = useCallback((type: 'input' | 'output') => {
+    // Fallback copy method (defined inside to avoid hoisting issues)
+    const fallbackCopyToClipboard = (text: string) => {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          console.log('Fallback 복사 성공!');
+          setCopyStatus(prev => ({ ...prev, [type]: true }));
+          setTimeout(() => {
+            setCopyStatus(prev => ({ ...prev, [type]: false }));
+          }, 2000);
+        } else {
+          console.error('복사 실패');
+          alert('복사에 실패했습니다. 수동으로 선택 후 Ctrl+C(또는 Cmd+C)를 사용해주세요.');
+        }
+      } catch (err) {
+        console.error('복사 실패:', err);
+        alert('복사에 실패했습니다. 수동으로 선택 후 Ctrl+C(또는 Cmd+C)를 사용해주세요.');
+      }
+      
+      document.body.removeChild(textArea);
+    };
+
     // Get the content directly from Monaco Editor instance
     let editorContent: string = '';
     
@@ -294,7 +326,7 @@ const App: React.FC = () => {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(editorContent)
         .then(() => {
-          console.log('복사 성공!');
+          console.log('Clipboard API 복사 성공!');
           setCopyStatus(prev => ({ ...prev, [type]: true }));
           setTimeout(() => {
             setCopyStatus(prev => ({ ...prev, [type]: false }));
@@ -303,44 +335,14 @@ const App: React.FC = () => {
         .catch(err => {
           console.error('Clipboard API 복사 실패:', err);
           // Fallback to older method
-          fallbackCopyToClipboard(editorContent, type);
+          fallbackCopyToClipboard(editorContent);
         });
     } else {
       // Use fallback method for older browsers or non-secure contexts
-      fallbackCopyToClipboard(editorContent, type);
+      console.log('Clipboard API 사용 불가, fallback 사용');
+      fallbackCopyToClipboard(editorContent);
     }
   }, [inputJson, outputJson]);
-  
-  const fallbackCopyToClipboard = (text: string, type: 'input' | 'output') => {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    try {
-      const successful = document.execCommand('copy');
-      if (successful) {
-        console.log('Fallback 복사 성공!');
-        setCopyStatus(prev => ({ ...prev, [type]: true }));
-        setTimeout(() => {
-          setCopyStatus(prev => ({ ...prev, [type]: false }));
-        }, 2000);
-      } else {
-        console.error('복사 실패');
-        alert('복사에 실패했습니다. 수동으로 선택 후 Ctrl+C(또는 Cmd+C)를 사용해주세요.');
-      }
-    } catch (err) {
-      console.error('복사 실패:', err);
-      alert('복사에 실패했습니다. 수동으로 선택 후 Ctrl+C(또는 Cmd+C)를 사용해주세요.');
-    }
-    
-    document.body.removeChild(textArea);
-  };
 
   const handleFileLoad = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
