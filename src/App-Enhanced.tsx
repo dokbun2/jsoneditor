@@ -393,79 +393,6 @@ const App: React.FC = () => {
         <div className="container mx-auto px-4 py-2">
           <div className="flex flex-wrap items-center justify-between">
             <div className="flex flex-wrap items-center gap-3">
-              {/* File operations */}
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="danger" 
-                  size="xs"
-                  onClick={async () => {
-                    try {
-                      // 먼저 클립보드 권한 확인
-                      if (navigator.clipboard && navigator.clipboard.readText) {
-                        const text = await navigator.clipboard.readText();
-                        setInputJson(text);
-                        parseJson(text);
-                        setError(null);
-                        
-                        // 자동으로 유효성 검사
-                        try {
-                          const parsed = JSON.parse(text);
-                          setIsValidJson(true);
-                          setOutputJson(JSON.stringify(parsed, null, indentSize));
-                        } catch {
-                          setIsValidJson(false);
-                        }
-                      } else {
-                        // 클립보드 API를 사용할 수 없는 경우 fallback
-                        const textarea = document.createElement('textarea');
-                        textarea.style.position = 'fixed';
-                        textarea.style.opacity = '0';
-                        document.body.appendChild(textarea);
-                        textarea.focus();
-                        document.execCommand('paste');
-                        const text = textarea.value;
-                        document.body.removeChild(textarea);
-                        
-                        if (text) {
-                          setInputJson(text);
-                          parseJson(text);
-                        } else {
-                          // 대체 방법: 프롬프트 사용
-                          const pastedText = prompt('JSON 텍스트를 붙여넣으세요:');
-                          if (pastedText) {
-                            setInputJson(pastedText);
-                            parseJson(pastedText);
-                          }
-                        }
-                      }
-                    } catch (err) {
-                      // 클립보드 접근 실패 시 프롬프트 사용
-                      const pastedText = prompt('JSON 텍스트를 붙여넣으세요 (Ctrl+V 또는 Cmd+V):');
-                      if (pastedText) {
-                        setInputJson(pastedText);
-                        parseJson(pastedText);
-                      }
-                    }
-                  }}
-                  title="클립보드에서 붙여넣기 (권한이 필요할 수 있습니다)"
-                >
-                  📋 자동복붙
-                </Button>
-
-                <label htmlFor="fileInput" className="cursor-pointer">
-                  <Button variant="primary" size="xs" as="span">
-                    📁 파일 열기
-                  </Button>
-                </label>
-                <input
-                  type="file"
-                  id="fileInput"
-                  accept=".json,.txt"
-                  className="hidden"
-                  onChange={handleFileLoad}
-                />
-              </div>
-
               <div className="h-5 w-px bg-border-primary" />
 
               {/* JSON operations */}
@@ -562,6 +489,63 @@ const App: React.FC = () => {
 
             {/* File operations on the right */}
             <div className="flex items-center gap-2">
+              <Button 
+                variant="danger" 
+                size="xs"
+                onClick={async () => {
+                  try {
+                    // 먼저 클립보드 권한 확인
+                    if (navigator.clipboard && navigator.clipboard.readText) {
+                      const text = await navigator.clipboard.readText();
+                      setInputJson(text);
+                      parseJson(text);
+                      setError(null);
+                      
+                      // 자동으로 유효성 검사
+                      try {
+                        const parsed = JSON.parse(text);
+                        setIsValidJson(true);
+                        setOutputJson(JSON.stringify(parsed, null, indentSize));
+                      } catch {
+                        setIsValidJson(false);
+                      }
+                    } else {
+                      // 클립보드 API를 사용할 수 없는 경우 fallback
+                      const textarea = document.createElement('textarea');
+                      textarea.style.position = 'fixed';
+                      textarea.style.opacity = '0';
+                      document.body.appendChild(textarea);
+                      textarea.focus();
+                      document.execCommand('paste');
+                      const text = textarea.value;
+                      document.body.removeChild(textarea);
+                      
+                      if (text) {
+                        setInputJson(text);
+                        parseJson(text);
+                      } else {
+                        // 대체 방법: 프롬프트 사용
+                        const pastedText = prompt('JSON 텍스트를 붙여넣으세요:');
+                        if (pastedText) {
+                          setInputJson(pastedText);
+                          parseJson(pastedText);
+                        }
+                      }
+                    }
+                  } catch (err) {
+                    // 클립보드 접근 실패 시 프롬프트 사용
+                    const pastedText = prompt('JSON 텍스트를 붙여넣으세요 (Ctrl+V 또는 Cmd+V):');
+                    if (pastedText) {
+                      setInputJson(pastedText);
+                      parseJson(pastedText);
+                    }
+                  }
+                }}
+                title="클립보드에서 붙여넣기 (권한이 필요할 수 있습니다)"
+              >
+                📋 자동복붙
+              </Button>
+              
               <label htmlFor="fileInput" className="cursor-pointer">
                 <Button variant="primary" size="xs" as="span">
                   📁 파일 열기
