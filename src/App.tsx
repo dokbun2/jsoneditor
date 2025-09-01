@@ -17,6 +17,7 @@ const App: React.FC = () => {
   const [fontSize, setFontSize] = useState(14);
   const [isValidJson, setIsValidJson] = useState(false);
   const [fileName, setFileName] = useState<string>('');
+  const [copyStatus, setCopyStatus] = useState<{ input: boolean; output: boolean }>({ input: false, output: false });
 
   // JSON 자동 수정 함수 - 더 강력하게 개선
   const autoFixJson = useCallback(() => {
@@ -267,10 +268,24 @@ const App: React.FC = () => {
     setFileName('');
   }, []);
 
-  const copyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      // 복사 완료 알림 (토스트 추가 가능)
-    });
+  const copyToClipboard = useCallback((text: string, type: 'input' | 'output') => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        // 복사 성공 시 상태 업데이트
+        setCopyStatus(prev => ({ ...prev, [type]: true }));
+        // 2초 후 상태 초기화
+        setTimeout(() => {
+          setCopyStatus(prev => ({ ...prev, [type]: false }));
+        }, 2000);
+      })
+      .catch((err) => {
+        // 복사 실패 시 에러 메시지 표시
+        console.error('복사 실패:', err);
+        setError('클립보드에 복사할 수 없습니다. 수동으로 선택하여 복사해주세요.');
+        setTimeout(() => {
+          setError(null);
+        }, 3000);
+      });
   }, []);
 
   const handleFileLoad = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
