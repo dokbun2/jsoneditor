@@ -268,54 +268,52 @@ const App: React.FC = () => {
     setFileName('');
   }, []);
 
-  const copyToClipboard = useCallback(async (text: string, type: 'input' | 'output') => {
+  const copyToClipboard = useCallback((text: string, type: 'input' | 'output') => {
+    // 방법 1: textarea를 이용한 복사 (가장 호환성이 좋음)
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '0';
+    textArea.style.top = '0';
+    textArea.style.opacity = '0';
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    let success = false;
+    
     try {
-      // 방법 1: 최신 Clipboard API 시도
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-        console.log('복사 성공 (Clipboard API)');
-      } else {
-        // 방법 2: 폴백 - textarea 생성하여 복사
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-          const successful = document.execCommand('copy');
-          if (successful) {
-            console.log('복사 성공 (execCommand)');
-          } else {
-            throw new Error('execCommand failed');
-          }
-        } finally {
-          document.body.removeChild(textArea);
-        }
+      success = document.execCommand('copy');
+      if (success) {
+        console.log('복사 성공!');
+        // 복사 성공 시 상태 업데이트
+        setCopyStatus(prev => ({ ...prev, [type]: true }));
+        // 2초 후 상태 초기화
+        setTimeout(() => {
+          setCopyStatus(prev => ({ ...prev, [type]: false }));
+        }, 2000);
       }
-      
-      // 복사 성공 시 상태 업데이트
-      setCopyStatus(prev => ({ ...prev, [type]: true }));
-      // 2초 후 상태 초기화
-      setTimeout(() => {
-        setCopyStatus(prev => ({ ...prev, [type]: false }));
-      }, 2000);
-      
     } catch (err) {
-      // 복사 실패 시 에러 메시지 표시
       console.error('복사 실패:', err);
-      
-      // 방법 3: 최후의 수단 - 프롬프트로 텍스트 표시
-      const message = '복사에 실패했습니다. 아래 텍스트를 수동으로 복사해주세요:';
-      prompt(message, text);
-      
-      setError('클립보드 복사에 실패했습니다. 대체 방법을 시도했습니다.');
-      setTimeout(() => {
-        setError(null);
-      }, 3000);
+    }
+    
+    document.body.removeChild(textArea);
+    
+    // 방법 2: Clipboard API 시도 (최신 브라우저)
+    if (!success && navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          console.log('Clipboard API로 복사 성공!');
+          setCopyStatus(prev => ({ ...prev, [type]: true }));
+          setTimeout(() => {
+            setCopyStatus(prev => ({ ...prev, [type]: false }));
+          }, 2000);
+        })
+        .catch(err => {
+          console.error('Clipboard API 복사 실패:', err);
+          alert('복사에 실패했습니다. Ctrl+C(또는 Cmd+C)를 사용해주세요.');
+        });
     }
   }, []);
 
@@ -573,7 +571,10 @@ const App: React.FC = () => {
                     <Button 
                       variant={copyStatus.input ? "success" : "ghost"} 
                       size="sm"
-                      onClick={() => copyToClipboard(inputJson, 'input')}
+                      onClick={() => {
+                        console.log('복사 버튼 클릭됨');
+                        copyToClipboard(inputJson, 'input');
+                      }}
                       disabled={!inputJson}
                     >
                       {copyStatus.input ? (
@@ -641,7 +642,10 @@ const App: React.FC = () => {
                     <Button 
                       variant={copyStatus.output ? "success" : "ghost"} 
                       size="sm"
-                      onClick={() => copyToClipboard(outputJson, 'output')}
+                      onClick={() => {
+                        console.log('출력 복사 버튼 클릭됨');
+                        copyToClipboard(outputJson, 'output');
+                      }}
                       disabled={!outputJson}
                     >
                       {copyStatus.output ? (
