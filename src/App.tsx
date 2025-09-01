@@ -527,54 +527,51 @@ const App: React.FC = () => {
                       variant="primary" 
                       size="sm"
                       onClick={() => {
-                        // DOM에서 직접 JSON 추출하여 복사
-                        try {
-                          const viewLines = document.querySelector('.monaco-editor:first-of-type .view-lines');
-                          if (viewLines) {
-                            const lines = viewLines.querySelectorAll('.view-line');
-                            const textLines: string[] = [];
-                            
-                            lines.forEach((line) => {
-                              const spans = line.querySelectorAll('span span');
-                              let lineText = '';
-                              spans.forEach(span => {
-                                lineText += span.textContent || '';
-                              });
-                              textLines.push(lineText);
+                        // Monaco Editor에서 직접 값 가져오기
+                        let jsonContent = '';
+                        
+                        // 먼저 Monaco Editor 인스턴스에서 시도
+                        if (inputEditorRef.current) {
+                          jsonContent = inputEditorRef.current.getValue();
+                        }
+                        
+                        // Monaco Editor 인스턴스가 없으면 state에서 가져오기
+                        if (!jsonContent) {
+                          jsonContent = inputJson;
+                        }
+                        
+                        if (!jsonContent) {
+                          alert('복사할 내용이 없습니다.');
+                          return;
+                        }
+                        
+                        // 클립보드에 복사
+                        if (navigator.clipboard && window.isSecureContext) {
+                          navigator.clipboard.writeText(jsonContent)
+                            .then(() => {
+                              alert('복사되었습니다!');
+                            })
+                            .catch(err => {
+                              console.error('복사 실패:', err);
+                              alert('복사에 실패했습니다.');
                             });
-                            
-                            const jsonContent = textLines.join('\n');
-                            
-                            if (navigator.clipboard && window.isSecureContext) {
-                              navigator.clipboard.writeText(jsonContent)
-                                .then(() => {
-                                  console.log('복사 성공!');
-                                })
-                                .catch(err => {
-                                  console.error('복사 실패:', err);
-                                  alert('복사에 실패했습니다.');
-                                });
-                            } else {
-                              // Fallback for older browsers
-                              const textArea = document.createElement('textarea');
-                              textArea.value = jsonContent;
-                              textArea.style.position = 'fixed';
-                              textArea.style.left = '-999999px';
-                              document.body.appendChild(textArea);
-                              textArea.focus();
-                              textArea.select();
-                              try {
-                                document.execCommand('copy');
-                                console.log('복사 성공!');
-                              } catch (err) {
-                                console.error('복사 실패:', err);
-                                alert('복사에 실패했습니다.');
-                              }
-                              document.body.removeChild(textArea);
-                            }
+                        } else {
+                          // Fallback for older browsers
+                          const textArea = document.createElement('textarea');
+                          textArea.value = jsonContent;
+                          textArea.style.position = 'fixed';
+                          textArea.style.left = '-999999px';
+                          document.body.appendChild(textArea);
+                          textArea.focus();
+                          textArea.select();
+                          try {
+                            document.execCommand('copy');
+                            alert('복사되었습니다!');
+                          } catch (err) {
+                            console.error('복사 실패:', err);
+                            alert('복사에 실패했습니다.');
                           }
-                        } catch (error) {
-                          console.error('DOM 추출 실패:', error);
+                          document.body.removeChild(textArea);
                         }
                       }}
                     >
@@ -637,54 +634,51 @@ const App: React.FC = () => {
                       variant="primary" 
                       size="sm"
                       onClick={() => {
-                        // DOM에서 직접 JSON 추출하여 복사 (출력 패널)
-                        try {
-                          const viewLines = document.querySelector('.monaco-editor:last-of-type .view-lines');
-                          if (viewLines) {
-                            const lines = viewLines.querySelectorAll('.view-line');
-                            const textLines: string[] = [];
-                            
-                            lines.forEach((line) => {
-                              const spans = line.querySelectorAll('span span');
-                              let lineText = '';
-                              spans.forEach(span => {
-                                lineText += span.textContent || '';
-                              });
-                              textLines.push(lineText);
+                        // Monaco Editor에서 직접 값 가져오기
+                        let jsonContent = '';
+                        
+                        // 먼저 Monaco Editor 인스턴스에서 시도
+                        if (outputEditorRef.current) {
+                          jsonContent = outputEditorRef.current.getValue();
+                        }
+                        
+                        // Monaco Editor 인스턴스가 없으면 state에서 가져오기
+                        if (!jsonContent) {
+                          jsonContent = outputJson;
+                        }
+                        
+                        if (!jsonContent) {
+                          alert('복사할 내용이 없습니다.');
+                          return;
+                        }
+                        
+                        // 클립보드에 복사
+                        if (navigator.clipboard && window.isSecureContext) {
+                          navigator.clipboard.writeText(jsonContent)
+                            .then(() => {
+                              alert('복사되었습니다!');
+                            })
+                            .catch(err => {
+                              console.error('복사 실패:', err);
+                              alert('복사에 실패했습니다.');
                             });
-                            
-                            const jsonContent = textLines.join('\n');
-                            
-                            if (navigator.clipboard && window.isSecureContext) {
-                              navigator.clipboard.writeText(jsonContent)
-                                .then(() => {
-                                  console.log('복사 성공!');
-                                })
-                                .catch(err => {
-                                  console.error('복사 실패:', err);
-                                  alert('복사에 실패했습니다.');
-                                });
-                            } else {
-                              // Fallback for older browsers
-                              const textArea = document.createElement('textarea');
-                              textArea.value = jsonContent;
-                              textArea.style.position = 'fixed';
-                              textArea.style.left = '-999999px';
-                              document.body.appendChild(textArea);
-                              textArea.focus();
-                              textArea.select();
-                              try {
-                                document.execCommand('copy');
-                                console.log('복사 성공!');
-                              } catch (err) {
-                                console.error('복사 실패:', err);
-                                alert('복사에 실패했습니다.');
-                              }
-                              document.body.removeChild(textArea);
-                            }
+                        } else {
+                          // Fallback for older browsers
+                          const textArea = document.createElement('textarea');
+                          textArea.value = jsonContent;
+                          textArea.style.position = 'fixed';
+                          textArea.style.left = '-999999px';
+                          document.body.appendChild(textArea);
+                          textArea.focus();
+                          textArea.select();
+                          try {
+                            document.execCommand('copy');
+                            alert('복사되었습니다!');
+                          } catch (err) {
+                            console.error('복사 실패:', err);
+                            alert('복사에 실패했습니다.');
                           }
-                        } catch (error) {
-                          console.error('DOM 추출 실패:', error);
+                          document.body.removeChild(textArea);
                         }
                       }}
                       disabled={!outputJson}
