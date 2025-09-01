@@ -268,24 +268,55 @@ const App: React.FC = () => {
     setFileName('');
   }, []);
 
-  const copyToClipboard = useCallback((text: string, type: 'input' | 'output') => {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        // 복사 성공 시 상태 업데이트
-        setCopyStatus(prev => ({ ...prev, [type]: true }));
-        // 2초 후 상태 초기화
-        setTimeout(() => {
-          setCopyStatus(prev => ({ ...prev, [type]: false }));
-        }, 2000);
-      })
-      .catch((err) => {
-        // 복사 실패 시 에러 메시지 표시
-        console.error('복사 실패:', err);
-        setError('클립보드에 복사할 수 없습니다. 수동으로 선택하여 복사해주세요.');
-        setTimeout(() => {
-          setError(null);
-        }, 3000);
-      });
+  const copyToClipboard = useCallback(async (text: string, type: 'input' | 'output') => {
+    try {
+      // 방법 1: 최신 Clipboard API 시도
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        console.log('복사 성공 (Clipboard API)');
+      } else {
+        // 방법 2: 폴백 - textarea 생성하여 복사
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            console.log('복사 성공 (execCommand)');
+          } else {
+            throw new Error('execCommand failed');
+          }
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+      
+      // 복사 성공 시 상태 업데이트
+      setCopyStatus(prev => ({ ...prev, [type]: true }));
+      // 2초 후 상태 초기화
+      setTimeout(() => {
+        setCopyStatus(prev => ({ ...prev, [type]: false }));
+      }, 2000);
+      
+    } catch (err) {
+      // 복사 실패 시 에러 메시지 표시
+      console.error('복사 실패:', err);
+      
+      // 방법 3: 최후의 수단 - 프롬프트로 텍스트 표시
+      const message = '복사에 실패했습니다. 아래 텍스트를 수동으로 복사해주세요:';
+      prompt(message, text);
+      
+      setError('클립보드 복사에 실패했습니다. 대체 방법을 시도했습니다.');
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
+    }
   }, []);
 
   const handleFileLoad = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
