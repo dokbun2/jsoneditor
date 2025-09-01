@@ -3,16 +3,27 @@ import {
   Button, 
   Card, 
   Badge,
-  SimpleFooter
+  SimpleFooter,
+  JsonEditor,
+  ClipboardIcon,
+  FileIcon,
+  DownloadIcon,
+  CheckIcon,
+  FormatIcon,
+  CompressIcon,
+  TrashIcon,
+  RepairIcon,
+  UndoIcon,
+  RedoIcon,
+  PlusIcon,
+  MinusIcon
 } from '@/components';
-import JsonEditor from '@/components/JsonEditor';
 import { cn } from '@/utils/cn';
 
 const App: React.FC = () => {
   // Core state
   const [inputJson, setInputJson] = useState('{\n  "Array": [1, 2, 3],\n  "Boolean": true,\n  "Null": null,\n  "Number": 123,\n  "Object": {\n    "a": "b",\n    "c": "d"\n  },\n  "String": "Hello World"\n}');
   const [outputJson, setOutputJson] = useState('');
-  const [parsedData, setParsedData] = useState<any>(null);
   
   // UI state
   const [fontSize, setFontSize] = useState(14);
@@ -85,12 +96,10 @@ const App: React.FC = () => {
   const parseJson = useCallback((json: string) => {
     try {
       const parsed = JSON.parse(json);
-      setParsedData(parsed);
       setIsValidJson(true);
       setError(null);
       return parsed;
     } catch (e) {
-      setParsedData(null);
       setIsValidJson(false);
       setError(translateError((e as Error).message));
       return null;
@@ -219,7 +228,6 @@ const App: React.FC = () => {
   const clearAll = useCallback(() => {
     setInputJson('');
     setOutputJson('');
-    setParsedData(null);
     setError(null);
     setIsValidJson(false);
     setFixedIssues([]);
@@ -404,6 +412,7 @@ const App: React.FC = () => {
                   disabled={!inputJson}
                   title="JSON 정렬 (Ctrl+I)"
                 >
+                  <FormatIcon size={14} className="inline mr-1" />
                   정렬
                 </Button>
 
@@ -414,6 +423,7 @@ const App: React.FC = () => {
                   disabled={!inputJson}
                   title="JSON 압축 (Ctrl+Shift+I)"
                 >
+                  <CompressIcon size={14} className="inline mr-1" />
                   압축
                 </Button>
 
@@ -425,7 +435,8 @@ const App: React.FC = () => {
                   disabled={!inputJson}
                   title="JSON 오류 자동 수정"
                 >
-                  🔧 자동 수정
+                  <RepairIcon size={14} className="inline mr-1" />
+                  자동 수정
                 </Button>
               </div>
 
@@ -440,7 +451,8 @@ const App: React.FC = () => {
                   disabled={historyIndex <= 0}
                   title="실행 취소 (Ctrl+Z)"
                 >
-                  ↶ 실행취소
+                  <UndoIcon size={14} className="inline mr-1" />
+                  실행취소
                 </Button>
 
                 <Button 
@@ -450,7 +462,8 @@ const App: React.FC = () => {
                   disabled={historyIndex >= history.length - 1}
                   title="다시 실행 (Ctrl+Shift+Z)"
                 >
-                  ↷ 다시실행
+                  <RedoIcon size={14} className="inline mr-1" />
+                  다시실행
                 </Button>
 
                 <Button 
@@ -459,7 +472,8 @@ const App: React.FC = () => {
                   onClick={clearAll}
                   title="모두 지우기"
                 >
-                  🗑️ 지우기
+                  <TrashIcon size={14} className="inline mr-1" />
+                  지우기
                 </Button>
               </div>
 
@@ -472,16 +486,18 @@ const App: React.FC = () => {
                     variant="ghost" 
                     size="xs"
                     onClick={() => setFontSize(Math.max(10, fontSize - 2))}
+                    className="border border-border-primary"
                   >
-                    A-
+                    <MinusIcon size={14} />
                   </Button>
                   <span className="text-xs text-text-tertiary w-10 text-center">{fontSize}</span>
                   <Button 
                     variant="ghost" 
                     size="xs"
                     onClick={() => setFontSize(Math.min(24, fontSize + 2))}
+                    className="border border-border-primary"
                   >
-                    A+
+                    <PlusIcon size={14} />
                   </Button>
                 </div>
               </div>
@@ -543,49 +559,14 @@ const App: React.FC = () => {
                 }}
                 title="클립보드에서 붙여넣기 (권한이 필요할 수 있습니다)"
               >
-                📋 자동복붙
-              </Button>
-              
-              <Button 
-                variant="secondary" 
-                size="xs"
-                onClick={async (e) => {
-                  try {
-                    const textToCopy = inputJson || '';
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                      await navigator.clipboard.writeText(textToCopy);
-                      // 복사 성공 시 시각적 피드백
-                      const button = e.currentTarget as HTMLButtonElement;
-                      const originalText = button.textContent;
-                      button.textContent = '✅ 복사됨!';
-                      setTimeout(() => {
-                        button.textContent = originalText;
-                      }, 1500);
-                    } else {
-                      // Fallback: 구형 브라우저용
-                      const textarea = document.createElement('textarea');
-                      textarea.value = textToCopy;
-                      textarea.style.position = 'fixed';
-                      textarea.style.opacity = '0';
-                      document.body.appendChild(textarea);
-                      textarea.select();
-                      document.execCommand('copy');
-                      document.body.removeChild(textarea);
-                    }
-                  } catch (err) {
-                    console.error('복사 실패:', err);
-                    alert('복사에 실패했습니다. 수동으로 복사해주세요.');
-                  }
-                }}
-                title="에디터 내용을 클립보드로 복사"
-                disabled={!inputJson}
-              >
-                📄 복사
+                <ClipboardIcon size={16} className="inline mr-1.5" />
+                자동복붙
               </Button>
               
               <label htmlFor="fileInput" className="cursor-pointer">
                 <Button variant="primary" size="xs" as="span">
-                  📁 파일 열기
+                  <FileIcon size={16} className="inline mr-1.5" />
+                  파일 열기
                 </Button>
               </label>
               <input
@@ -602,7 +583,8 @@ const App: React.FC = () => {
                 onClick={downloadJson}
                 disabled={!inputJson && !outputJson}
               >
-                💾 다운로드
+                <DownloadIcon size={16} className="inline mr-1.5" />
+                다운로드
               </Button>
             </div>
           </div>
