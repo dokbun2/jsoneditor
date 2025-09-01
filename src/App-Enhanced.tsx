@@ -546,6 +546,43 @@ const App: React.FC = () => {
                 📋 자동복붙
               </Button>
               
+              <Button 
+                variant="secondary" 
+                size="xs"
+                onClick={async (e) => {
+                  try {
+                    const textToCopy = inputJson || '';
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                      await navigator.clipboard.writeText(textToCopy);
+                      // 복사 성공 시 시각적 피드백
+                      const button = e.currentTarget as HTMLButtonElement;
+                      const originalText = button.textContent;
+                      button.textContent = '✅ 복사됨!';
+                      setTimeout(() => {
+                        button.textContent = originalText;
+                      }, 1500);
+                    } else {
+                      // Fallback: 구형 브라우저용
+                      const textarea = document.createElement('textarea');
+                      textarea.value = textToCopy;
+                      textarea.style.position = 'fixed';
+                      textarea.style.opacity = '0';
+                      document.body.appendChild(textarea);
+                      textarea.select();
+                      document.execCommand('copy');
+                      document.body.removeChild(textarea);
+                    }
+                  } catch (err) {
+                    console.error('복사 실패:', err);
+                    alert('복사에 실패했습니다. 수동으로 복사해주세요.');
+                  }
+                }}
+                title="에디터 내용을 클립보드로 복사"
+                disabled={!inputJson}
+              >
+                📄 복사
+              </Button>
+              
               <label htmlFor="fileInput" className="cursor-pointer">
                 <Button variant="primary" size="xs" as="span">
                   📁 파일 열기
