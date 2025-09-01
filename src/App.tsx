@@ -370,6 +370,39 @@ const App: React.FC = () => {
               />
               
               <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    setInputJson(text);
+                    setError(null);
+                    setFixedIssues([]);
+                    setOutputJson('');
+                    
+                    // 붙여넣기 후 자동으로 유효성 검사
+                    try {
+                      const parsed = JSON.parse(text);
+                      setIsValidJson(true);
+                      const formatted = JSON.stringify(parsed, null, 2);
+                      setOutputJson(formatted);
+                    } catch (err) {
+                      setIsValidJson(false);
+                    }
+                  } catch (err) {
+                    setError('클립보드에서 텍스트를 읽을 수 없습니다.');
+                  }
+                }}
+                leftIcon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                }
+              >
+                자동 붙여넣기
+              </Button>
+              
+              <Button 
                 variant="success" 
                 size="sm"
                 onClick={autoFixJson}
