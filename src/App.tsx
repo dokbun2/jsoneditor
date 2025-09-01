@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { 
   Button, 
@@ -18,6 +18,10 @@ const App: React.FC = () => {
   const [isValidJson, setIsValidJson] = useState(false);
   const [fileName, setFileName] = useState<string>('');
   const [copyStatus, setCopyStatus] = useState<{ input: boolean; output: boolean }>({ input: false, output: false });
+  
+  // References to Monaco Editor instances
+  const inputEditorRef = useRef<any>(null);
+  const outputEditorRef = useRef<any>(null);
 
   // JSON 자동 수정 함수 - 더 강력하게 개선
   const autoFixJson = useCallback(() => {
@@ -268,43 +272,29 @@ const App: React.FC = () => {
     setFileName('');
   }, []);
 
-  const copyToClipboard = useCallback((text: string, type: 'input' | 'output') => {
-    // 방법 1: textarea를 이용한 복사 (가장 호환성이 좋음)
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '0';
-    textArea.style.top = '0';
-    textArea.style.opacity = '0';
+  const copyToClipboard = useCallback((type: 'input' | 'output') => {
+    // Get the content directly from Monaco Editor instance
+    let editorContent: string = '';
     
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    let success = false;
-    
-    try {
-      success = document.execCommand('copy');
-      if (success) {
-        console.log('복사 성공!');
-        // 복사 성공 시 상태 업데이트
-        setCopyStatus(prev => ({ ...prev, [type]: true }));
-        // 2초 후 상태 초기화
-        setTimeout(() => {
-          setCopyStatus(prev => ({ ...prev, [type]: false }));
-        }, 2000);
-      }
-    } catch (err) {
-      console.error('복사 실패:', err);
+    if (type === 'input' && inputEditorRef.current) {
+      editorContent = inputEditorRef.current.getValue();
+    } else if (type === 'output' && outputEditorRef.current) {
+      editorContent = outputEditorRef.current.getValue();
+    } else {
+      // Fallback to state if editor ref is not available
+      editorContent = type === 'input' ? inputJson : outputJson;
     }
     
-    document.body.removeChild(textArea);
+    if (!editorContent) {
+      console.log('복사할 내용이 없습니다.');
+      return;
+    }
     
-    // 방법 2: Clipboard API 시도 (최신 브라우저)
-    if (!success && navigator.clipboard) {
-      navigator.clipboard.writeText(text)
+    // Try modern Clipboard API first
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(editorContent)
         .then(() => {
-          console.log('Clipboard API로 복사 성공!');
+          console.log('복사 성공!');
           setCopyStatus(prev => ({ ...prev, [type]: true }));
           setTimeout(() => {
             setCopyStatus(prev => ({ ...prev, [type]: false }));
@@ -312,10 +302,45 @@ const App: React.FC = () => {
         })
         .catch(err => {
           console.error('Clipboard API 복사 실패:', err);
-          alert('복사에 실패했습니다. Ctrl+C(또는 Cmd+C)를 사용해주세요.');
+          // Fallback to older method
+          fallbackCopyToClipboard(editorContent, type);
         });
+    } else {
+      // Use fallback method for older browsers or non-secure contexts
+      fallbackCopyToClipboard(editorContent, type);
     }
-  }, []);
+  }, [inputJson, outputJson]);
+  
+  const fallbackCopyToClipboard = (text: string, type: 'input' | 'output') => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        console.log('Fallback 복사 성공!');
+        setCopyStatus(prev => ({ ...prev, [type]: true }));
+        setTimeout(() => {
+          setCopyStatus(prev => ({ ...prev, [type]: false }));
+        }, 2000);
+      } else {
+        console.error('복사 실패');
+        alert('복사에 실패했습니다. 수동으로 선택 후 Ctrl+C(또는 Cmd+C)를 사용해주세요.');
+      }
+    } catch (err) {
+      console.error('복사 실패:', err);
+      alert('복사에 실패했습니다. 수동으로 선택 후 Ctrl+C(또는 Cmd+C)를 사용해주세요.');
+    }
+    
+    document.body.removeChild(textArea);
+  };
 
   const handleFileLoad = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -573,7 +598,7 @@ const App: React.FC = () => {
                       size="sm"
                       onClick={() => {
                         console.log('복사 버튼 클릭됨');
-                        copyToClipboard(inputJson, 'input');
+                        copyToClipboard('input');
                       }}
                       disabled={!inputJson}
                     >
@@ -603,6 +628,10 @@ const App: React.FC = () => {
                   theme="vs-dark"
                   value={inputJson}
                   onChange={(value) => setInputJson(value || '')}
+                  onMount={(editor) => {
+                    inputEditorRef.current = editor;
+                    console.log('Input editor mounted');
+                  }}
                   options={{
                     minimap: { enabled: false },
                     fontSize: fontSize,
@@ -644,7 +673,7 @@ const App: React.FC = () => {
                       size="sm"
                       onClick={() => {
                         console.log('출력 복사 버튼 클릭됨');
-                        copyToClipboard(outputJson, 'output');
+                        copyToClipboard('output');
                       }}
                       disabled={!outputJson}
                     >
@@ -684,6 +713,10 @@ const App: React.FC = () => {
                   defaultLanguage="json"
                   theme="vs-dark"
                   value={outputJson}
+                  onMount={(editor) => {
+                    outputEditorRef.current = editor;
+                    console.log('Output editor mounted');
+                  }}
                   options={{
                     readOnly: true,
                     minimap: { enabled: false },

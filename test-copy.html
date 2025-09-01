@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Copy Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #4a9eff;
+            margin-bottom: 15px;
+        }
+        .json-content {
+            background: #000;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            white-space: pre;
+            overflow-x: auto;
+            border: 1px solid #444;
+        }
+        .instructions {
+            background: #333;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4a9eff;
+        }
+        .test-case {
+            margin: 15px 0;
+        }
+        .test-case h3 {
+            color: #66d9ef;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JSON 복사 기능 테스트</h1>
+        
+        <div class="instructions">
+            <h2>테스트 방법</h2>
+            <ol>
+                <li>http://localhost:5173/ 에서 JSON 에디터를 엽니다</li>
+                <li>아래 테스트 케이스의 JSON을 입력 필드에 붙여넣습니다</li>
+                <li>"자동 수정" 버튼을 클릭합니다</li>
+                <li>출력 필드의 "복사" 버튼을 클릭합니다</li>
+                <li>복사된 내용이 정확히 포맷팅된 JSON인지 확인합니다</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>테스트 케이스 1: 기본 JSON</h2>
+            <div class="test-case">
+                <h3>입력 (잘못된 형식)</h3>
+                <div class="json-content">{'name': "iPhone 17", 'price': 1200000, features: ["AI", "5G", 'Camera']}</div>
+            </div>
+            <div class="test-case">
+                <h3>예상 출력 (포맷팅된 JSON)</h3>
+                <div class="json-content">{
+  "name": "iPhone 17",
+  "price": 1200000,
+  "features": [
+    "AI",
+    "5G",
+    "Camera"
+  ]
+}</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>테스트 케이스 2: 중첩된 JSON</h2>
+            <div class="test-case">
+                <h3>입력</h3>
+                <div class="json-content">{
+  "cf_id": "CF_000001",
+  "current_stage_name": "scenario_development",
+  "timestamp": "2025-09-01T13:30:32Z",
+  "schema_version": "1.0.0",
+  "transfer_ready_for_next_stage": true,
+  "next_stage_name": "visual_concept",
+  "source_cf_id_for_current_stage": "CF_000001_2-1",
+  "cf_metadata": {
+    "product_name": "iPhone 17",
+    "campaign_purpose": "제품 론칭",
+    "confirmed_genre": "Tech",
+    "duration_minutes": 0.5,
+    "duration_seconds": 30,
+    "target_audience": "20대",
+    "emotional_tone": "영감적",
+    "visual_tone": "미래적",
+    "context_analysis": {
+      "temporal_context": "현대, 가까운 미래",
+      "cultural_context": "AI 기술이 일상에 통합되는 문화",
+      "market_context": "개인화된 AI 경험을 중시하는 스마트폰 시장"
+    }
+  },
+  "scenario_data": {
+    "source_data_references": {
+      "planning_data_id": "CF_000001_2-1",
+      "conti_structure_type": "opening-development-closing"
+    },
+    "treatment_data": {}
+  }
+}</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>테스트 케이스 3: 한 줄 JSON (압축)</h2>
+            <div class="test-case">
+                <h3>입력</h3>
+                <div class="json-content">{"id":1,"name":"테스트","data":{"value":100,"status":"active"},"items":[1,2,3]}</div>
+            </div>
+            <div class="test-case">
+                <h3>예상 출력 (정렬 버튼 클릭 후)</h3>
+                <div class="json-content">{
+  "id": 1,
+  "name": "테스트",
+  "data": {
+    "value": 100,
+    "status": "active"
+  },
+  "items": [
+    1,
+    2,
+    3
+  ]
+}</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>복사 기능 검증</h2>
+            <div class="instructions">
+                <p><strong>검증 항목:</strong></p>
+                <ul>
+                    <li>✅ 복사 버튼 클릭 시 "복사완료" 메시지 표시</li>
+                    <li>✅ 2초 후 자동으로 "복사" 텍스트로 복귀</li>
+                    <li>✅ 클립보드에 정확한 JSON 포맷 저장</li>
+                    <li>✅ 들여쓰기와 줄바꿈 유지</li>
+                    <li>✅ 한글 문자 깨짐 없음</li>
+                    <li>✅ 특수문자 이스케이프 처리 정상</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
