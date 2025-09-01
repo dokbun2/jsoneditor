@@ -400,14 +400,54 @@ const App: React.FC = () => {
                   size="xs"
                   onClick={async () => {
                     try {
-                      const text = await navigator.clipboard.readText();
-                      handleInputChange(text);
-                      setError(null);
+                      // 먼저 클립보드 권한 확인
+                      if (navigator.clipboard && navigator.clipboard.readText) {
+                        const text = await navigator.clipboard.readText();
+                        setInputJson(text);
+                        handleInputChange(text);
+                        setError(null);
+                        
+                        // 자동으로 유효성 검사
+                        try {
+                          const parsed = JSON.parse(text);
+                          setIsValidJson(true);
+                          setOutputJson(JSON.stringify(parsed, null, indentSize));
+                        } catch {
+                          setIsValidJson(false);
+                        }
+                      } else {
+                        // 클립보드 API를 사용할 수 없는 경우 fallback
+                        const textarea = document.createElement('textarea');
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.focus();
+                        document.execCommand('paste');
+                        const text = textarea.value;
+                        document.body.removeChild(textarea);
+                        
+                        if (text) {
+                          setInputJson(text);
+                          handleInputChange(text);
+                        } else {
+                          // 대체 방법: 프롬프트 사용
+                          const pastedText = prompt('JSON 텍스트를 붙여넣으세요:');
+                          if (pastedText) {
+                            setInputJson(pastedText);
+                            handleInputChange(pastedText);
+                          }
+                        }
+                      }
                     } catch (err) {
-                      setError('클립보드에서 텍스트를 읽을 수 없습니다.');
+                      // 클립보드 접근 실패 시 프롬프트 사용
+                      const pastedText = prompt('JSON 텍스트를 붙여넣으세요 (Ctrl+V 또는 Cmd+V):');
+                      if (pastedText) {
+                        setInputJson(pastedText);
+                        handleInputChange(pastedText);
+                      }
                     }
                   }}
-                  title="클립보드에서 붙여넣기"
+                  title="클립보드에서 붙여넣기 (권한이 필요할 수 있습니다)"
                 >
                   📋 자동복붙
                 </Button>
