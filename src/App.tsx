@@ -17,7 +17,6 @@ const App: React.FC = () => {
   const [fontSize, setFontSize] = useState(14);
   const [isValidJson, setIsValidJson] = useState(false);
   const [fileName, setFileName] = useState<string>('');
-  const [copyStatus, setCopyStatus] = useState<{ input: boolean; output: boolean }>({ input: false, output: false });
   
   // References to Monaco Editor instances
   const inputEditorRef = useRef<any>(null);
@@ -122,7 +121,7 @@ const App: React.FC = () => {
 
     // 9. 이스케이프되지 않은 문자열 내 따옴표 처리
     // 문자열 내의 따옴표를 이스케이프
-    fixedJson = fixedJson.replace(/"([^"]*)"(\s*:)/g, (match, p1, p2) => {
+    fixedJson = fixedJson.replace(/"([^"]*)"(\s*:)/g, (_, p1, p2) => {
       const escaped = p1.replace(/(?<!\\)"/g, '\\"');
       return `"${escaped}"${p2}`;
     });
@@ -272,110 +271,6 @@ const App: React.FC = () => {
     setFileName('');
   }, []);
 
-  const copyToClipboard = useCallback((type: 'input' | 'output') => {
-    // Fallback copy method (defined inside to avoid hoisting issues)
-    const fallbackCopyToClipboard = (text: string) => {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      textArea.style.top = '-999999px';
-      
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      
-      try {
-        const successful = document.execCommand('copy');
-        if (successful) {
-          console.log('Fallback 복사 성공!');
-          setCopyStatus(prev => ({ ...prev, [type]: true }));
-          setTimeout(() => {
-            setCopyStatus(prev => ({ ...prev, [type]: false }));
-          }, 2000);
-        } else {
-          console.error('복사 실패');
-          alert('복사에 실패했습니다. 수동으로 선택 후 Ctrl+C(또는 Cmd+C)를 사용해주세요.');
-        }
-      } catch (err) {
-        console.error('복사 실패:', err);
-        alert('복사에 실패했습니다. 수동으로 선택 후 Ctrl+C(또는 Cmd+C)를 사용해주세요.');
-      }
-      
-      document.body.removeChild(textArea);
-    };
-
-    // Get the content directly from Monaco Editor instance or DOM
-    let editorContent: string = '';
-    
-    // 먼저 Monaco Editor 인스턴스에서 시도
-    if (type === 'input' && inputEditorRef.current) {
-      editorContent = inputEditorRef.current.getValue();
-    } else if (type === 'output' && outputEditorRef.current) {
-      editorContent = outputEditorRef.current.getValue();
-    }
-    
-    // Monaco Editor에서 실패하면 DOM에서 직접 추출 시도
-    if (!editorContent) {
-      try {
-        // Monaco Editor의 DOM 구조에서 직접 텍스트 추출
-        const editorSelector = type === 'input' ? 
-          '.monaco-editor:first-of-type .view-lines' : 
-          '.monaco-editor:last-of-type .view-lines';
-        
-        const viewLines = document.querySelector(editorSelector);
-        if (viewLines) {
-          const lines = viewLines.querySelectorAll('.view-line');
-          const textLines: string[] = [];
-          
-          lines.forEach((line) => {
-            // 각 라인의 텍스트 내용을 추출
-            const spans = line.querySelectorAll('span span');
-            let lineText = '';
-            spans.forEach(span => {
-              lineText += span.textContent || '';
-            });
-            textLines.push(lineText);
-          });
-          
-          editorContent = textLines.join('\n');
-        }
-      } catch (domError) {
-        console.error('DOM에서 텍스트 추출 실패:', domError);
-      }
-    }
-    
-    // 그래도 실패하면 state에서 가져오기
-    if (!editorContent) {
-      editorContent = type === 'input' ? inputJson : outputJson;
-    }
-    
-    if (!editorContent) {
-      console.log('복사할 내용이 없습니다.');
-      return;
-    }
-    
-    // Try modern Clipboard API first
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(editorContent)
-        .then(() => {
-          console.log('Clipboard API 복사 성공!');
-          setCopyStatus(prev => ({ ...prev, [type]: true }));
-          setTimeout(() => {
-            setCopyStatus(prev => ({ ...prev, [type]: false }));
-          }, 2000);
-        })
-        .catch(err => {
-          console.error('Clipboard API 복사 실패:', err);
-          // Fallback to older method
-          fallbackCopyToClipboard(editorContent);
-        });
-    } else {
-      // Use fallback method for older browsers or non-secure contexts
-      console.log('Clipboard API 사용 불가, fallback 사용');
-      fallbackCopyToClipboard(editorContent);
-    }
-  }, [inputJson, outputJson]);
 
   const handleFileLoad = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -653,14 +548,29 @@ const App: React.FC = () => {
                             if (navigator.clipboard && window.isSecureContext) {
                               navigator.clipboard.writeText(jsonContent)
                                 .then(() => {
-                                  setCopyStatus(prev => ({ ...prev, input: true }));
-                                  setTimeout(() => {
-                                    setCopyStatus(prev => ({ ...prev, input: false }));
-                                  }, 2000);
+                                  console.log('복사 성공!');
                                 })
                                 .catch(err => {
                                   console.error('복사 실패:', err);
+                                  alert('복사에 실패했습니다.');
                                 });
+                            } else {
+                              // Fallback for older browsers
+                              const textArea = document.createElement('textarea');
+                              textArea.value = jsonContent;
+                              textArea.style.position = 'fixed';
+                              textArea.style.left = '-999999px';
+                              document.body.appendChild(textArea);
+                              textArea.focus();
+                              textArea.select();
+                              try {
+                                document.execCommand('copy');
+                                console.log('복사 성공!');
+                              } catch (err) {
+                                console.error('복사 실패:', err);
+                                alert('복사에 실패했습니다.');
+                              }
+                              document.body.removeChild(textArea);
                             }
                           }
                         } catch (error) {
@@ -672,31 +582,6 @@ const App: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                       </svg>
                       복사하기
-                    </Button>
-                    <Button 
-                      variant={copyStatus.input ? "success" : "ghost"} 
-                      size="sm"
-                      onClick={() => {
-                        console.log('복사 버튼 클릭됨');
-                        copyToClipboard('input');
-                      }}
-                      disabled={!inputJson}
-                    >
-                      {copyStatus.input ? (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          복사완료
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          복사
-                        </>
-                      )}
                     </Button>
                   </div>
                 </div>
@@ -749,29 +634,65 @@ const App: React.FC = () => {
                   </h3>
                   <div className="flex items-center gap-2">
                     <Button 
-                      variant={copyStatus.output ? "success" : "ghost"} 
+                      variant="primary" 
                       size="sm"
                       onClick={() => {
-                        console.log('출력 복사 버튼 클릭됨');
-                        copyToClipboard('output');
+                        // DOM에서 직접 JSON 추출하여 복사 (출력 패널)
+                        try {
+                          const viewLines = document.querySelector('.monaco-editor:last-of-type .view-lines');
+                          if (viewLines) {
+                            const lines = viewLines.querySelectorAll('.view-line');
+                            const textLines: string[] = [];
+                            
+                            lines.forEach((line) => {
+                              const spans = line.querySelectorAll('span span');
+                              let lineText = '';
+                              spans.forEach(span => {
+                                lineText += span.textContent || '';
+                              });
+                              textLines.push(lineText);
+                            });
+                            
+                            const jsonContent = textLines.join('\n');
+                            
+                            if (navigator.clipboard && window.isSecureContext) {
+                              navigator.clipboard.writeText(jsonContent)
+                                .then(() => {
+                                  console.log('복사 성공!');
+                                })
+                                .catch(err => {
+                                  console.error('복사 실패:', err);
+                                  alert('복사에 실패했습니다.');
+                                });
+                            } else {
+                              // Fallback for older browsers
+                              const textArea = document.createElement('textarea');
+                              textArea.value = jsonContent;
+                              textArea.style.position = 'fixed';
+                              textArea.style.left = '-999999px';
+                              document.body.appendChild(textArea);
+                              textArea.focus();
+                              textArea.select();
+                              try {
+                                document.execCommand('copy');
+                                console.log('복사 성공!');
+                              } catch (err) {
+                                console.error('복사 실패:', err);
+                                alert('복사에 실패했습니다.');
+                              }
+                              document.body.removeChild(textArea);
+                            }
+                          }
+                        } catch (error) {
+                          console.error('DOM 추출 실패:', error);
+                        }
                       }}
                       disabled={!outputJson}
                     >
-                      {copyStatus.output ? (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          복사완료
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          복사
-                        </>
-                      )}
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                      복사하기
                     </Button>
                     <Button 
                       variant="primary" 
