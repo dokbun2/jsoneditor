@@ -404,7 +404,7 @@ const App: React.FC = () => {
                       if (navigator.clipboard && navigator.clipboard.readText) {
                         const text = await navigator.clipboard.readText();
                         setInputJson(text);
-                        handleInputChange(text);
+                        parseJson(text);
                         setError(null);
                         
                         // 자동으로 유효성 검사
@@ -428,13 +428,13 @@ const App: React.FC = () => {
                         
                         if (text) {
                           setInputJson(text);
-                          handleInputChange(text);
+                          parseJson(text);
                         } else {
                           // 대체 방법: 프롬프트 사용
                           const pastedText = prompt('JSON 텍스트를 붙여넣으세요:');
                           if (pastedText) {
                             setInputJson(pastedText);
-                            handleInputChange(pastedText);
+                            parseJson(pastedText);
                           }
                         }
                       }
@@ -443,7 +443,7 @@ const App: React.FC = () => {
                       const pastedText = prompt('JSON 텍스트를 붙여넣으세요 (Ctrl+V 또는 Cmd+V):');
                       if (pastedText) {
                         setInputJson(pastedText);
-                        handleInputChange(pastedText);
+                        parseJson(pastedText);
                       }
                     }
                   }}
