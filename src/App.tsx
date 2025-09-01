@@ -305,15 +305,48 @@ const App: React.FC = () => {
       document.body.removeChild(textArea);
     };
 
-    // Get the content directly from Monaco Editor instance
+    // Get the content directly from Monaco Editor instance or DOM
     let editorContent: string = '';
     
+    // 먼저 Monaco Editor 인스턴스에서 시도
     if (type === 'input' && inputEditorRef.current) {
       editorContent = inputEditorRef.current.getValue();
     } else if (type === 'output' && outputEditorRef.current) {
       editorContent = outputEditorRef.current.getValue();
-    } else {
-      // Fallback to state if editor ref is not available
+    }
+    
+    // Monaco Editor에서 실패하면 DOM에서 직접 추출 시도
+    if (!editorContent) {
+      try {
+        // Monaco Editor의 DOM 구조에서 직접 텍스트 추출
+        const editorSelector = type === 'input' ? 
+          '.monaco-editor:first-of-type .view-lines' : 
+          '.monaco-editor:last-of-type .view-lines';
+        
+        const viewLines = document.querySelector(editorSelector);
+        if (viewLines) {
+          const lines = viewLines.querySelectorAll('.view-line');
+          const textLines: string[] = [];
+          
+          lines.forEach((line) => {
+            // 각 라인의 텍스트 내용을 추출
+            const spans = line.querySelectorAll('span span');
+            let lineText = '';
+            spans.forEach(span => {
+              lineText += span.textContent || '';
+            });
+            textLines.push(lineText);
+          });
+          
+          editorContent = textLines.join('\n');
+        }
+      } catch (domError) {
+        console.error('DOM에서 텍스트 추출 실패:', domError);
+      }
+    }
+    
+    // 그래도 실패하면 state에서 가져오기
+    if (!editorContent) {
       editorContent = type === 'input' ? inputJson : outputJson;
     }
     
@@ -595,6 +628,51 @@ const App: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-text-primary">입력</h3>
                   <div className="flex items-center gap-2">
+                    <Button 
+                      variant="primary" 
+                      size="sm"
+                      onClick={() => {
+                        // DOM에서 직접 JSON 추출하여 복사
+                        try {
+                          const viewLines = document.querySelector('.monaco-editor:first-of-type .view-lines');
+                          if (viewLines) {
+                            const lines = viewLines.querySelectorAll('.view-line');
+                            const textLines: string[] = [];
+                            
+                            lines.forEach((line) => {
+                              const spans = line.querySelectorAll('span span');
+                              let lineText = '';
+                              spans.forEach(span => {
+                                lineText += span.textContent || '';
+                              });
+                              textLines.push(lineText);
+                            });
+                            
+                            const jsonContent = textLines.join('\n');
+                            
+                            if (navigator.clipboard && window.isSecureContext) {
+                              navigator.clipboard.writeText(jsonContent)
+                                .then(() => {
+                                  setCopyStatus(prev => ({ ...prev, input: true }));
+                                  setTimeout(() => {
+                                    setCopyStatus(prev => ({ ...prev, input: false }));
+                                  }, 2000);
+                                })
+                                .catch(err => {
+                                  console.error('복사 실패:', err);
+                                });
+                            }
+                          }
+                        } catch (error) {
+                          console.error('DOM 추출 실패:', error);
+                        }
+                      }}
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                      복사하기
+                    </Button>
                     <Button 
                       variant={copyStatus.input ? "success" : "ghost"} 
                       size="sm"
