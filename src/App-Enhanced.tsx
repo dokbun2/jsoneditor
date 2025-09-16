@@ -22,7 +22,7 @@ import { cn } from '@/utils/cn';
 
 const App: React.FC = () => {
   // Core state
-  const [inputJson, setInputJson] = useState('{\n  "Array": [1, 2, 3],\n  "Boolean": true,\n  "Null": null,\n  "Number": 123,\n  "Object": {\n    "a": "b",\n    "c": "d"\n  },\n  "String": "Hello World"\n}');
+  const [inputJson, setInputJson] = useState('');
   const [outputJson, setOutputJson] = useState('');
   
   // UI state
