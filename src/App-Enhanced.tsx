@@ -384,7 +384,7 @@ const App: React.FC = () => {
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold text-text-primary">AIFI JSON 에디터</h1>
+              <h1 className="text-xl font-bold text-text-primary">JSON 에디터</h1>
               {fileName && (
                 <Badge variant="info" className="font-mono text-xs">
                   {fileName}
@@ -541,7 +541,7 @@ const App: React.FC = () => {
                         parseJson(text);
                       } else {
                         // 대체 방법: 프롬프트 사용
-                        const pastedText = prompt('JSON 텍스트를 붙여넣으세요:');
+                        const pastedText = prompt('JSON 텍스트를 붙여넣으세요:', '');
                         if (pastedText) {
                           setInputJson(pastedText);
                           parseJson(pastedText);
@@ -550,7 +550,7 @@ const App: React.FC = () => {
                     }
                   } catch (err) {
                     // 클립보드 접근 실패 시 프롬프트 사용
-                    const pastedText = prompt('JSON 텍스트를 붙여넣으세요 (Ctrl+V 또는 Cmd+V):');
+                    const pastedText = prompt('JSON 텍스트를 붙여넣으세요 (Ctrl+V 또는 Cmd+V):', '');
                     if (pastedText) {
                       setInputJson(pastedText);
                       parseJson(pastedText);
