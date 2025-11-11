@@ -32,6 +32,7 @@ const App: React.FC = () => {
   
   // Features state
   const [liveMode] = useState(true);
+  const [autoRepair, setAutoRepair] = useState(true);
   const [showLineNumbers] = useState(true);
   const [wordWrap] = useState(true);
   const [minimap] = useState(false);
@@ -245,21 +246,77 @@ const App: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        setInputJson(content);
-        parseJson(content);
-        if (liveMode) {
-          try {
-            const parsed = JSON.parse(content);
-            const formatted = JSON.stringify(parsed, null, indentSize);
-            setOutputJson(formatted);
-          } catch (err) {
-            // Keep original if not valid
+
+        // 자동으로 유효성 검사
+        try {
+          const parsed = JSON.parse(content);
+          const formatted = JSON.stringify(parsed, null, indentSize);
+          setInputJson(formatted);
+          setOutputJson(formatted);
+          setIsValidJson(true);
+          setError(null);
+          addToHistory(formatted);
+        } catch (parseError) {
+          // JSON 파싱 실패 시 자동 수정 시도
+          if (autoRepair) {
+            let fixedJson = content;
+            const issues: string[] = [];
+
+            // Remove comments
+            fixedJson = fixedJson.replace(/\/\/.*$/gm, '');
+            fixedJson = fixedJson.replace(/\/\*[\s\S]*?\*\//g, '');
+            if (fixedJson !== content) issues.push('주석 제거됨');
+
+            // Fix trailing commas
+            fixedJson = fixedJson.replace(/,(\s*[}\]])/g, '$1');
+
+            // Convert single quotes to double quotes
+            fixedJson = fixedJson.replace(/'([^']+)'\s*:/g, '"$1":');
+            fixedJson = fixedJson.replace(/:\s*'([^']*)'/g, ': "$1"');
+            if (fixedJson.includes('"') && content.includes("'")) {
+              issues.push('작은따옴표를 큰따옴표로 변경됨');
+            }
+
+            // Add quotes to unquoted keys
+            fixedJson = fixedJson.replace(/(\{|,)\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
+            fixedJson = fixedJson.replace(/^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/gm, '"$1":');
+
+            // Convert JavaScript values to JSON
+            fixedJson = fixedJson.replace(/:\s*undefined/gi, ': null');
+            fixedJson = fixedJson.replace(/:\s*NaN/g, ': null');
+            fixedJson = fixedJson.replace(/:\s*Infinity/gi, ': null');
+
+            // Fix missing commas
+            fixedJson = fixedJson.replace(/(\d|true|false|null)\s*\n\s*"/g, '$1,\n"');
+            fixedJson = fixedJson.replace(/"([^"]*)"(\s*)"([^"]*)"\s*:/g, '"$1",$2"$3":');
+            fixedJson = fixedJson.replace(/(\}|\])(\s*)"([^"]*)"\s*:/g, '$1,$2"$3":');
+
+            try {
+              const parsed = JSON.parse(fixedJson);
+              const formatted = JSON.stringify(parsed, null, indentSize);
+              setInputJson(formatted);
+              setOutputJson(formatted);
+              setIsValidJson(true);
+              setError(null);
+              setFixedIssues(issues.length > 0 ? issues : ['JSON이 성공적으로 자동 수정되었습니다']);
+              addToHistory(formatted);
+            } catch (finalError) {
+              setInputJson(content);
+              setIsValidJson(false);
+              setError(translateError((finalError as Error).message));
+            }
+          } else {
+            setInputJson(content);
+            parseJson(content);
+            if (liveMode) {
+              setOutputJson('');
+            }
           }
         }
       };
       reader.readAsText(file);
     }
-  }, [parseJson, liveMode, indentSize]);
+  }, [indentSize, autoRepair, parseJson, liveMode]);
 
   // Download JSON
   const downloadJson = useCallback(() => {
@@ -405,8 +462,8 @@ const App: React.FC = () => {
 
               {/* JSON operations */}
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   size="xs"
                   onClick={formatJson}
                   disabled={!inputJson}
@@ -416,8 +473,8 @@ const App: React.FC = () => {
                   정렬
                 </Button>
 
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   size="xs"
                   onClick={compactJson}
                   disabled={!inputJson}
@@ -427,16 +484,28 @@ const App: React.FC = () => {
                   압축
                 </Button>
 
-
-                <Button 
-                  variant="success" 
+                <Button
+                  variant="success"
                   size="xs"
                   onClick={repairJson}
                   disabled={!inputJson}
                   title="JSON 오류 자동 수정"
                 >
                   <RepairIcon size={14} className="inline mr-1" />
-                  자동 수정
+                  수동 수정
+                </Button>
+
+                <Button
+                  variant={autoRepair ? "success" : "ghost"}
+                  size="xs"
+                  onClick={() => setAutoRepair(!autoRepair)}
+                  title={`붙여넣기 시 자동 수정 ${autoRepair ? '활성화됨' : '비활성화됨'}`}
+                  className={cn(
+                    "border border-border-primary",
+                    autoRepair && "bg-green-500/20 hover:bg-green-500/30"
+                  )}
+                >
+                  {autoRepair ? '✓' : '✗'} 자동수정
                 </Button>
               </div>
 
@@ -505,47 +574,85 @@ const App: React.FC = () => {
 
             {/* File operations on the right */}
             <div className="flex items-center gap-2">
-              <Button 
-                variant="danger" 
+              <Button
+                variant="danger"
                 size="xs"
                 onClick={async () => {
                   try {
                     // 먼저 클립보드 권한 확인
                     if (navigator.clipboard && navigator.clipboard.readText) {
                       const text = await navigator.clipboard.readText();
-                      setInputJson(text);
-                      parseJson(text);
-                      setError(null);
-                      
+
                       // 자동으로 유효성 검사
                       try {
                         const parsed = JSON.parse(text);
+                        const formatted = JSON.stringify(parsed, null, indentSize);
+                        setInputJson(formatted);
+                        setOutputJson(formatted);
                         setIsValidJson(true);
-                        setOutputJson(JSON.stringify(parsed, null, indentSize));
-                      } catch {
-                        setIsValidJson(false);
+                        setError(null);
+                        addToHistory(formatted);
+                      } catch (parseError) {
+                        // JSON 파싱 실패 시 자동 수정 시도
+                        if (autoRepair) {
+                          let fixedJson = text;
+                          const issues: string[] = [];
+
+                          // Remove comments
+                          fixedJson = fixedJson.replace(/\/\/.*$/gm, '');
+                          fixedJson = fixedJson.replace(/\/\*[\s\S]*?\*\//g, '');
+                          if (fixedJson !== text) issues.push('주석 제거됨');
+
+                          // Fix trailing commas
+                          fixedJson = fixedJson.replace(/,(\s*[}\]])/g, '$1');
+
+                          // Convert single quotes to double quotes
+                          fixedJson = fixedJson.replace(/'([^']+)'\s*:/g, '"$1":');
+                          fixedJson = fixedJson.replace(/:\s*'([^']*)'/g, ': "$1"');
+                          if (fixedJson.includes('"') && text.includes("'")) {
+                            issues.push('작은따옴표를 큰따옴표로 변경됨');
+                          }
+
+                          // Add quotes to unquoted keys
+                          fixedJson = fixedJson.replace(/(\{|,)\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
+                          fixedJson = fixedJson.replace(/^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/gm, '"$1":');
+
+                          // Convert JavaScript values to JSON
+                          fixedJson = fixedJson.replace(/:\s*undefined/gi, ': null');
+                          fixedJson = fixedJson.replace(/:\s*NaN/g, ': null');
+                          fixedJson = fixedJson.replace(/:\s*Infinity/gi, ': null');
+
+                          // Fix missing commas
+                          fixedJson = fixedJson.replace(/(\d|true|false|null)\s*\n\s*"/g, '$1,\n"');
+                          fixedJson = fixedJson.replace(/"([^"]*)"(\s*)"([^"]*)"\s*:/g, '"$1",$2"$3":');
+                          fixedJson = fixedJson.replace(/(\}|\])(\s*)"([^"]*)"\s*:/g, '$1,$2"$3":');
+
+                          try {
+                            const parsed = JSON.parse(fixedJson);
+                            const formatted = JSON.stringify(parsed, null, indentSize);
+                            setInputJson(formatted);
+                            setOutputJson(formatted);
+                            setIsValidJson(true);
+                            setError(null);
+                            setFixedIssues(issues.length > 0 ? issues : ['JSON이 성공적으로 자동 수정되었습니다']);
+                            addToHistory(formatted);
+                          } catch (finalError) {
+                            setInputJson(text);
+                            setIsValidJson(false);
+                            setError(translateError((finalError as Error).message));
+                          }
+                        } else {
+                          setInputJson(text);
+                          setIsValidJson(false);
+                          setError(translateError((parseError as Error).message));
+                        }
                       }
                     } else {
                       // 클립보드 API를 사용할 수 없는 경우 fallback
-                      const textarea = document.createElement('textarea');
-                      textarea.style.position = 'fixed';
-                      textarea.style.opacity = '0';
-                      document.body.appendChild(textarea);
-                      textarea.focus();
-                      document.execCommand('paste');
-                      const text = textarea.value;
-                      document.body.removeChild(textarea);
-                      
-                      if (text) {
-                        setInputJson(text);
-                        parseJson(text);
-                      } else {
-                        // 대체 방법: 프롬프트 사용
-                        const pastedText = prompt('JSON 텍스트를 붙여넣으세요:', '');
-                        if (pastedText) {
-                          setInputJson(pastedText);
-                          parseJson(pastedText);
-                        }
+                      const pastedText = prompt('JSON 텍스트를 붙여넣으세요:', '');
+                      if (pastedText) {
+                        setInputJson(pastedText);
+                        parseJson(pastedText);
                       }
                     }
                   } catch (err) {
@@ -557,7 +664,7 @@ const App: React.FC = () => {
                     }
                   }
                 }}
-                title="클립보드에서 붙여넣기 (권한이 필요할 수 있습니다)"
+                title="클립보드에서 붙여넣기 (자동 수정 활성화)"
               >
                 <ClipboardIcon size={16} className="inline mr-1.5" />
                 자동복붙
