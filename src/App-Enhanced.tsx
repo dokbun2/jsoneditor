@@ -1,11 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { 
-  Button, 
-  Card, 
+import {
+  Button,
+  Card,
   Badge,
   SimpleFooter,
   JsonEditor,
-  AdSense,
   ClipboardIcon,
   FileIcon,
   DownloadIcon,
@@ -639,9 +638,6 @@ const App: React.FC = () => {
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-1">
-        {/* AdSense 광고 */}
-        <AdSense />
-        
         <div className="h-full">
           {/* Single panel */}
           <Card variant="elevated" className="overflow-hidden h-full">
