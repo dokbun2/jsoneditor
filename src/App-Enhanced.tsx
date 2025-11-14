@@ -772,7 +772,7 @@ const App: React.FC = () => {
               </div>
             </div>
             
-            <div className="h-[600px] overflow-hidden">
+            <div className="h-[400px] overflow-hidden">
               <JsonEditor
                 value={inputJson}
                 onChange={setInputJson}
