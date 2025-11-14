@@ -804,14 +804,14 @@ const App: React.FC = () => {
       </main>
 
       {/* Advertisement Section */}
-      <div className="border-t border-border-primary bg-background-secondary/30 mt-auto">
+      <div className="border-t border-border-primary bg-background-secondary/30">
         <div className="container mx-auto px-4 py-6">
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 광고 1 - 웹페이지광고 */}
-            <div style={{ width: '100%', maxWidth: '336px' }}>
+            <div style={{ minHeight: '280px', display: 'flex', justifyContent: 'center' }}>
               <ins
                 className="adsbygoogle"
-                style={{ display: 'block' }}
+                style={{ display: 'block', width: '100%', maxWidth: '100%' }}
                 data-ad-client="ca-pub-2764784359698938"
                 data-ad-slot="7217586018"
                 data-ad-format="auto"
@@ -820,10 +820,10 @@ const App: React.FC = () => {
             </div>
 
             {/* 광고 2 - 웹페이지광고하단 */}
-            <div style={{ width: '100%', maxWidth: '336px' }}>
+            <div style={{ minHeight: '280px', display: 'flex', justifyContent: 'center' }}>
               <ins
                 className="adsbygoogle"
-                style={{ display: 'block' }}
+                style={{ display: 'block', width: '100%', maxWidth: '100%' }}
                 data-ad-client="ca-pub-2764784359698938"
                 data-ad-slot="7824924829"
                 data-ad-format="auto"
