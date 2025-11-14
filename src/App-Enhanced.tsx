@@ -434,6 +434,16 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [formatJson, compactJson, undo, redo]);
 
+  // Load Google AdSense
+  useEffect(() => {
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (err) {
+      console.error('AdSense error:', err);
+    }
+  }, []);
+
   return (
     <div className={cn("min-h-screen flex flex-col", theme === 'dark' ? 'dark bg-background-primary' : 'bg-gray-50')}>
       {/* Header */}
@@ -793,8 +803,39 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      {/* Advertisement Section */}
+      <div className="border-t border-border-primary bg-background-secondary/30 mt-auto">
+        <div className="container mx-auto px-4 py-6">
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
+            {/* 광고 1 - 웹페이지광고 */}
+            <div style={{ width: '100%', maxWidth: '336px' }}>
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'block' }}
+                data-ad-client="ca-pub-2764784359698938"
+                data-ad-slot="7217586018"
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              />
+            </div>
+
+            {/* 광고 2 - 웹페이지광고하단 */}
+            <div style={{ width: '100%', maxWidth: '336px' }}>
+              <ins
+                className="adsbygoogle"
+                style={{ display: 'block' }}
+                data-ad-client="ca-pub-2764784359698938"
+                data-ad-slot="7824924829"
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Footer */}
-      <footer className="border-t border-border-primary bg-background-secondary/30 mt-auto">
+      <footer className="border-t border-border-primary bg-background-secondary/30">
         <SimpleFooter
           text="© 2025 JSON Editor - made by Haruoff"
           links={[]}
